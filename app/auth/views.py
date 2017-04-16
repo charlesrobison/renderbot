@@ -1,10 +1,26 @@
-from flask import flash, redirect, render_template, url_for
+# Imports
+from flask import flash, redirect, render_template, url_for, send_from_directory, request, jsonify
+import flask_excel as excel
+import flask_uploads as uploads
 from flask_login import login_required, login_user, logout_user
+from werkzeug.utils import secure_filename
+import os
 
+# Local Imports
 from . import auth
-from .forms import LoginForm, RegistrationForm
+from .forms import LoginForm, RegistrationForm, UploadForm
 from .. import db
 from ..models import User
+
+# Global variables
+UPLOADED_FOLDER = '/tmp/renderbot_uploads/'
+ALLOWED_EXTENSIONS = set(['csv', 'xls', 'xlsx'])
+
+
+#  Determine if allowed file type
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
 @auth.route('/register', methods=['GET', 'POST'])
@@ -40,9 +56,10 @@ def login():
     Log a user in through the login form
     """
     form = LoginForm()
+
     if form.validate_on_submit():
 
-        # check whether employee exists in the database and whether
+        # check whether user exists in the database and whether
         # the password entered matches the password in the database
         user = User.query.filter_by(email=form.email.data).first()
         if user is not None and user.verify_password(
@@ -59,6 +76,28 @@ def login():
 
     # load login template
     return render_template('auth/login.html', form=form, title='Login')
+
+
+@auth.route('/upload/', methods=['GET', 'POST'])
+@login_required
+def upload_file():
+    """
+    Handle file uploads 
+    """
+
+    form = UploadForm()
+
+    if request.method == 'POST':
+        file = request.files['file']
+
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(auth.config['UPLOAD_FOLDER'], filename))
+            flash('You have successfully uploaded the file.')
+            return redirect(url_for('auth.uploads'))
+
+        # load upload template
+        return render_template('auth/upload.html', form=form, title='Upload File')
 
 
 @auth.route('/logout')
