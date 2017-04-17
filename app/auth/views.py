@@ -143,7 +143,7 @@ def list_uploads():
 @auth.route('/uploads/upload/<id>')
 def single_file(id):
     file = File.query.get_or_404(id)
-    return render_template('auth/uploads/file.html', file=file)
+    return render_template('auth/uploads/file.html', file=file, title="Data Set")
 
 
 @auth.route('/uploads/delete/<int:id>', methods=['GET', 'POST'])
