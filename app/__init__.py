@@ -7,6 +7,7 @@ from flask_bootstrap import Bootstrap
 
 # local imports
 from config import app_config
+UPLOAD_FOLDER = '/tmp/renderbot_uploads/'
 
 # db variable initialization
 db = SQLAlchemy()
