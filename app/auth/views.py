@@ -140,6 +140,12 @@ def list_uploads():
                            uploads=uploads, title="Uploads")
 
 
+@auth.route('/uploads/upload/<id>')
+def single_file(id):
+    file = File.query.get_or_404(id)
+    return render_template('auth/uploads/file.html', file=file)
+
+
 @auth.route('/uploads/delete/<int:id>', methods=['GET', 'POST'])
 @login_required
 def delete_upload(id):

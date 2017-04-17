@@ -17,6 +17,7 @@
               <thead>
                 <tr>
                   <th width="15%"> File Name </th>
+                  <th width="15%"> View </th>
                   <th width="15%"> Delete </th>
                 </tr>
               </thead>
@@ -24,6 +25,11 @@
               {% for upload in uploads %}
                 <tr>
                   <td> {{ upload.file }} </td>
+                  <td>
+                   <a href="{{ url_for('auth.single_file', id=upload.id) }}">
+                      <i class="fa fa-eye"></i> View
+                   </a>
+                  </td>
                   <td>
                     <a href="{{ url_for('auth.delete_upload', id=upload.id) }}">
                       <i class="fa fa-trash"></i> Delete

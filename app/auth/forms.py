@@ -42,5 +42,6 @@ class UploadForm(FlaskForm):
     """
     Form for users to upload a spreadsheet
     """
+    user_id = HiddenField('User ID')
     file = FileField('Select File')
     submit = SubmitField('Submit')
