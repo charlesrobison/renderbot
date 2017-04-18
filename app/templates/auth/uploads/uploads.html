@@ -24,7 +24,7 @@
               <tbody>
               {% for upload in uploads %}
                 <tr>
-                  <td> {{ upload.file }} </td>
+                  <td> {{ upload.file[upload.file.rindex("/")+1:] }} </td>
                   <td>
                    <a href="{{ url_for('auth.single_file', id=upload.id) }}">
                       <i class="fa fa-eye"></i> View

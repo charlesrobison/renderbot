@@ -4,10 +4,10 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_bootstrap import Bootstrap
+from flask_uploads import UploadSet, DOCUMENTS, DATA, configure_uploads
 
 # local imports
 from config import app_config
-UPLOAD_FOLDER = '/tmp/renderbot_uploads/'
 
 # db variable initialization
 db = SQLAlchemy()
@@ -30,6 +30,10 @@ def create_app(config_name):
 
     # Bootstrap
     Bootstrap(app)
+
+    # # Configure the data uploading via Flask-Uploads
+    # data_set = UploadSet('data_set', DOCUMENTS, DATA)
+    # configure_uploads(app, data_set)
 
     from app import models
 
