@@ -84,6 +84,7 @@ def logout():
     Handle requests to the /logout route
     Log a user out through the logout link
     """
+
     logout_user()
     flash('You have successfully been logged out.')
 
@@ -112,12 +113,13 @@ def upload_file():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(UPLOAD_FOLDER, filename))
+            file_path = os.path.join(UPLOAD_FOLDER, filename)
 
             # add file name to the database
-            form_filename = File(file=form.file.data)
+            form_filename = File(file=file_path)
             db.session.add(form_filename)
             db.session.commit()
-            flash('You have successfully uploaded a new file.')
+            flash('You have uploaded {}.'.format(filename))
             return redirect(url_for('auth.list_uploads'))
 
     # load upload template
@@ -142,8 +144,12 @@ def list_uploads():
 
 @auth.route('/uploads/upload/<id>')
 def single_file(id):
+    """
+    Renders preview of selected file
+    """
+
     file = File.query.get_or_404(id)
-    return render_template('auth/uploads/file.html', file=file, title="Data Set")
+    return render_template('auth/uploads/file.html', file=file, title="Data Preview")
 
 
 @auth.route('/uploads/delete/<int:id>', methods=['GET', 'POST'])
