@@ -1,5 +1,6 @@
 # Imports
 from flask_login import UserMixin
+from sqlalchemy.orm import relationship, backref
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from app import db, login_manager
@@ -21,6 +22,7 @@ class User(UserMixin, db.Model):
     last_name = db.Column(db.String(60), index=True)
     password_hash = db.Column(db.String(128))
     is_admin = db.Column(db.Boolean, default=False)
+    file = db.relationship('File', backref='users')
 
     @property
     def password(self):
@@ -50,3 +52,23 @@ class User(UserMixin, db.Model):
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+
+class File(db.Model):
+    """
+    Create a files table
+    """
+
+    # Ensures table will be named in plural and not in singular
+    # as is the name of the model
+    __tablename__ = 'files'
+
+    id = db.Column(db.Integer, primary_key=True)
+    file = db.Column(db.String(200), index=True, unique=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+    def __repr__(self):
+        return '<File: {}>'.format(self.name)
+
+
+

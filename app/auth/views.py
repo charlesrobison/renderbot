@@ -1,10 +1,25 @@
-from flask import flash, redirect, render_template, url_for
+# Imports
+from flask import flash, redirect, render_template, url_for, request
 from flask_login import login_required, login_user, logout_user
+from werkzeug.utils import secure_filename
+import os
 
+# Local Imports
+import app
 from . import auth
-from .forms import LoginForm, RegistrationForm
+from .forms import LoginForm, RegistrationForm, UploadForm
 from .. import db
-from ..models import User
+from ..models import User, File
+
+# Global variables
+ALLOWED_EXTENSIONS = set(['csv', 'xls', 'xlsx', 'txt'])
+UPLOAD_FOLDER = '/tmp/renderbot_uploads'
+
+
+#  Determine if allowed file type
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
 @auth.route('/register', methods=['GET', 'POST'])
@@ -40,9 +55,10 @@ def login():
     Log a user in through the login form
     """
     form = LoginForm()
+
     if form.validate_on_submit():
 
-        # check whether employee exists in the database and whether
+        # check whether user exists in the database and whether
         # the password entered matches the password in the database
         user = User.query.filter_by(email=form.email.data).first()
         if user is not None and user.verify_password(
@@ -68,8 +84,87 @@ def logout():
     Handle requests to the /logout route
     Log a user out through the logout link
     """
+
     logout_user()
     flash('You have successfully been logged out.')
 
     # redirect to the login page
     return redirect(url_for('auth.login'))
+
+
+#  File Upload Views
+
+
+@auth.route('/uploads/upload', methods=['GET', 'POST'])
+@login_required
+def upload_file():
+    """
+    Handle file uploads 
+    """
+
+    upload_file = True
+
+    form = UploadForm()
+
+    if request.method == 'POST':
+        file = request.files['file']
+
+        # save to app server (adjust path at top)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(UPLOAD_FOLDER, filename))
+            file_path = os.path.join(UPLOAD_FOLDER, filename)
+
+            # add file name to the database
+            form_filename = File(file=file_path)
+            db.session.add(form_filename)
+            db.session.commit()
+            flash('You have uploaded {}.'.format(filename))
+            return redirect(url_for('auth.list_uploads'))
+
+    # load upload template
+    return render_template('auth/uploads/upload.html',
+                           action="Upload",
+                           upload_file=upload_file,
+                           form=form, title='Upload File')
+
+
+@auth.route('/uploads/uploads', methods=['GET', 'POST'])
+@login_required
+def list_uploads():
+    """
+    List all user uploads
+    """
+
+    uploads = File.query.all()
+
+    return render_template('auth/uploads/uploads.html',
+                           uploads=uploads, title="Uploads")
+
+
+@auth.route('/uploads/upload/<id>')
+def single_file(id):
+    """
+    Renders preview of selected file
+    """
+
+    file = File.query.get_or_404(id)
+    return render_template('auth/uploads/file.html', file=file, title="Data Preview")
+
+
+@auth.route('/uploads/delete/<int:id>', methods=['GET', 'POST'])
+@login_required
+def delete_upload(id):
+    """
+    Delete a user file record / user access to the file (not an actual file) from the database
+    """
+
+    uploads = File.query.get_or_404(id)
+    db.session.delete(uploads)
+    db.session.commit()
+    flash('You have successfully deleted the file.')
+
+    # redirect to the uploads page
+    return redirect(url_for('auth.list_uploads'))
+
+    return render_template(title="Delete File")
