@@ -151,8 +151,10 @@ def single_file(id):
     Renders preview of selected file
     """
 
-    # Get file object from database by id
+    # Get file path from database by id
     file = File.query.get_or_404(id).file
+
+    # Get filename for template
     file_name = os.path.basename(file)
 
     # Get file from server to process into data frame
