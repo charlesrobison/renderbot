@@ -1,12 +1,12 @@
 {% import "bootstrap/wtf.html" as wtf %}
 {% extends "base.html" %}
-{% block title %}File{% endblock %}
+{% block title %}File Preview{% endblock %}
 {% block body %}
 <div class="content-section">
   <div class="center">
-    <h1>Data Preview</h1>
+    <h1>{{ name }}</h1>
     <br/>
-    {{ wtf.quick_form(file) }}
+    {{ data|safe }}
   </div>
 </div>
 {% endblock %}
