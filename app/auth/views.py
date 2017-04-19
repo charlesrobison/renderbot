@@ -112,8 +112,8 @@ def upload_file():
         # save to app server (adjust path at top)
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            file.save(os.path.join(UPLOAD_FOLDER, filename))
             file_path = os.path.join(UPLOAD_FOLDER, filename)
+            file.save(file_path)
 
             # add file name to the database
             form_filename = File(file=file_path)
