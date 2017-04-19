@@ -1,6 +1,7 @@
 # Imports
-from flask import flash, redirect, render_template, url_for, request
-from flask_login import login_required, login_user, logout_user
+from flask import flash, redirect, render_template, url_for, request, send_from_directory
+from flask_login import login_required, login_user, logout_user, current_user
+import pandas as pd
 from werkzeug.utils import secure_filename
 import os
 
@@ -116,7 +117,8 @@ def upload_file():
             file.save(file_path)
 
             # add file name to the database
-            form_filename = File(file=file_path)
+            form_filename = File(file=file_path,
+                                 user_id=current_user.id)
             db.session.add(form_filename)
             db.session.commit()
             flash('You have uploaded {}.'.format(filename))
@@ -136,20 +138,29 @@ def list_uploads():
     List all user uploads
     """
 
-    uploads = File.query.all()
+    uploads = File.query.filter_by(user_id=current_user.id)
 
     return render_template('auth/uploads/uploads.html',
                            uploads=uploads, title="Uploads")
 
 
 @auth.route('/uploads/upload/<id>')
+@login_required
 def single_file(id):
     """
     Renders preview of selected file
     """
 
-    file = File.query.get_or_404(id)
-    return render_template('auth/uploads/file.html', file=file, title="Data Preview")
+    # Get file object from database by id
+    file = File.query.get_or_404(id).file
+    file_name = os.path.basename(file)
+
+    # Get file from server to process into data frame
+    df = pd.DataFrame(pd.read_csv(file, encoding="ISO-8859-1"))
+
+    return render_template('auth/uploads/file.html', name=file_name,
+                           data=df.to_html(),
+                           title="Data Preview")
 
 
 @auth.route('/uploads/delete/<int:id>', methods=['GET', 'POST'])
