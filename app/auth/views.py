@@ -1,6 +1,6 @@
 # Imports
 from flask import flash, redirect, render_template, url_for, request
-from flask_login import login_required, login_user, logout_user
+from flask_login import login_required, login_user, logout_user, current_user
 from werkzeug.utils import secure_filename
 import os
 
@@ -116,7 +116,8 @@ def upload_file():
             file.save(file_path)
 
             # add file name to the database
-            form_filename = File(file=file_path)
+            form_filename = File(file=file_path,
+                                 user_id=current_user.id)
             db.session.add(form_filename)
             db.session.commit()
             flash('You have uploaded {}.'.format(filename))
@@ -136,7 +137,7 @@ def list_uploads():
     List all user uploads
     """
 
-    uploads = File.query.all()
+    uploads = File.query.filter_by(user_id=current_user.id)
 
     return render_template('auth/uploads/uploads.html',
                            uploads=uploads, title="Uploads")
