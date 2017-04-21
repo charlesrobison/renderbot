@@ -69,6 +69,3 @@ class File(db.Model):
 
     def __repr__(self):
         return '<File: {}>'.format(self.name)
-
-
-

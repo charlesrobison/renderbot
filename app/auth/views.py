@@ -12,7 +12,7 @@ from .. import db
 from ..models import User, File
 
 # Global variables
-ALLOWED_EXTENSIONS = set(['csv', 'xls', 'xlsx', 'txt'])
+ALLOWED_EXTENSIONS = set(['csv', 'xls', 'xlsx', 'tsv'])
 UPLOAD_FOLDER = '/tmp/renderbot_uploads'
 
 
@@ -99,7 +99,7 @@ def logout():
 @login_required
 def upload_file():
     """
-    Handle file uploads 
+    Handle file uploads
     """
 
     upload_file = True
@@ -140,7 +140,6 @@ def list_uploads():
 
     return render_template('auth/uploads/uploads.html',
                            uploads=uploads, title="Uploads")
-
 
 @auth.route('/uploads/upload/<id>')
 def single_file(id):
