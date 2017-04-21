@@ -13,7 +13,7 @@ from .. import db
 from ..models import User, File
 
 # Global variables
-ALLOWED_EXTENSIONS = set(['csv', 'xls', 'xlsx', 'txt'])
+ALLOWED_EXTENSIONS = set(['csv', 'xls', 'xlsx'])
 EXCEL_EXTENSIONS = ['.xls', '.xlsx']
 UPLOAD_FOLDER = '/tmp/renderbot_uploads'
 
