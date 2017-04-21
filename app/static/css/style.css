@@ -105,3 +105,17 @@ p.copyright {
   height: 100%;
   margin: 0 auto -4em;
 }
+
+# Dataframe alternate styling
+
+}
+
+.dataframe * {border-color: #c0c0c0 !important;}
+.dataframe * {font-family: 'Roboto', sans-serif;}
+.dataframe th{background: #eee;}
+.dataframe td{text-align: right; min-width:5em;}
+.dataframe-summary-row tr:last-child,
+.dataframe-summary-col td:last-child{
+    background: #eee;
+    font-weight: 500;d
+}
