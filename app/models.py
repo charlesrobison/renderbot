@@ -64,7 +64,7 @@ class File(db.Model):
     __tablename__ = 'files'
 
     id = db.Column(db.Integer, primary_key=True)
-    file = db.Column(db.String(200), index=True, unique=True)
+    file = db.Column(db.String(200), index=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
     def __repr__(self):

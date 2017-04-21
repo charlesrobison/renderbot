@@ -191,4 +191,3 @@ def delete_upload(id):
     # redirect to the uploads page
     return redirect(url_for('auth.list_uploads'))
 
-    return render_template(title="Delete File")
