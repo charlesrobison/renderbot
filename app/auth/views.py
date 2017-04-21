@@ -156,12 +156,23 @@ def single_file(id):
 
     # Get filename for template
     file_name = os.path.basename(file)
+    # Get file path and file extension
+    file_path, file_extension = os.path.splitext(file_name)
 
     # Get file from server to process into data frame
-    df = pd.DataFrame(pd.read_csv(file, encoding="ISO-8859-1"))
+    if file_extension == '.csv':
+        # Load CSV file type
+        df = pd.DataFrame(pd.read_csv(file, encoding="ISO-8859-1"))
+    # Check extensions in EXCEL_EXTENSIONS list object
+    else:
+        # Load files with excel based file extensions
+        df = pd.DataFrame(pd.read_excel(file, encoding="ISO-8859-1"))
+
+    # Render dataframe as sample of entire data set
+    df_head = df.head()
 
     return render_template('auth/uploads/file.html', name=file_name,
-                           data=df.to_html(),
+                           data=df_head.to_html(),
                            title="Data Preview")
 
 
