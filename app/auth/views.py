@@ -14,6 +14,7 @@ from ..models import User, File
 
 # Global variables
 ALLOWED_EXTENSIONS = set(['csv', 'xls', 'xlsx', 'txt'])
+EXCEL_EXTENSIONS = ['.xls', '.xlsx']
 UPLOAD_FOLDER = '/tmp/renderbot_uploads'
 
 
@@ -123,6 +124,9 @@ def upload_file():
             db.session.commit()
             flash('You have uploaded {}.'.format(filename))
             return redirect(url_for('auth.list_uploads'))
+        else:
+            flash('File not supported. Please upload a csv or excel file type.')
+            return redirect(url_for('auth.list_uploads'))
 
     # load upload template
     return render_template('auth/uploads/upload.html',
@@ -163,12 +167,11 @@ def single_file(id):
     if file_extension == '.csv':
         # Load CSV file type
         df = pd.DataFrame(pd.read_csv(file, encoding="ISO-8859-1"))
-    # Check extensions in EXCEL_EXTENSIONS list object
     else:
         # Load files with excel based file extensions
         df = pd.DataFrame(pd.read_excel(file, encoding="ISO-8859-1"))
 
-    # Render dataframe as sample of entire data set
+    # Render data frame as sample of entire data set
     df_head = df.head()
 
     return render_template('auth/uploads/file.html', name=file_name,
