@@ -1,6 +1,7 @@
 # Imports
-from flask import flash, redirect, render_template, url_for, request
-from flask_login import login_required, login_user, logout_user
+from flask import flash, redirect, render_template, url_for, request, send_from_directory
+from flask_login import login_required, login_user, logout_user, current_user
+import pandas as pd
 from werkzeug.utils import secure_filename
 import os
 
@@ -12,7 +13,8 @@ from .. import db
 from ..models import User, File
 
 # Global variables
-ALLOWED_EXTENSIONS = set(['csv', 'xls', 'xlsx', 'txt'])
+ALLOWED_EXTENSIONS = set(['csv', 'xls', 'xlsx'])
+EXCEL_EXTENSIONS = ['.xls', '.xlsx']
 UPLOAD_FOLDER = '/tmp/renderbot_uploads'
 
 
@@ -112,14 +114,18 @@ def upload_file():
         # save to app server (adjust path at top)
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            file.save(os.path.join(UPLOAD_FOLDER, filename))
             file_path = os.path.join(UPLOAD_FOLDER, filename)
+            file.save(file_path)
 
             # add file name to the database
-            form_filename = File(file=file_path)
+            form_filename = File(file=file_path,
+                                 user_id=current_user.id)
             db.session.add(form_filename)
             db.session.commit()
             flash('You have uploaded {}.'.format(filename))
+            return redirect(url_for('auth.list_uploads'))
+        else:
+            flash('File not supported. Please upload a csv or excel file type.')
             return redirect(url_for('auth.list_uploads'))
 
     # load upload template
@@ -136,20 +142,41 @@ def list_uploads():
     List all user uploads
     """
 
-    uploads = File.query.all()
+    uploads = File.query.filter_by(user_id=current_user.id)
 
     return render_template('auth/uploads/uploads.html',
                            uploads=uploads, title="Uploads")
 
 
 @auth.route('/uploads/upload/<id>')
+@login_required
 def single_file(id):
     """
     Renders preview of selected file
     """
 
-    file = File.query.get_or_404(id)
-    return render_template('auth/uploads/file.html', file=file, title="Data Preview")
+    # Get file path from database by id
+    file = File.query.get_or_404(id).file
+
+    # Get filename for template
+    file_name = os.path.basename(file)
+    # Get file path and file extension
+    file_path, file_extension = os.path.splitext(file_name)
+
+    # Get file from server to process into data frame
+    if file_extension == '.csv':
+        # Load CSV file type
+        df = pd.DataFrame(pd.read_csv(file, encoding="ISO-8859-1"))
+    else:
+        # Load files with excel based file extensions
+        df = pd.DataFrame(pd.read_excel(file, encoding="ISO-8859-1"))
+
+    # Render data frame as sample of entire data set
+    df_head = df.head()
+
+    return render_template('auth/uploads/file.html', name=file_name,
+                           data=df_head.to_html(),
+                           title="Data Preview")
 
 
 @auth.route('/uploads/delete/<int:id>', methods=['GET', 'POST'])
@@ -167,4 +194,3 @@ def delete_upload(id):
     # redirect to the uploads page
     return redirect(url_for('auth.list_uploads'))
 
-    return render_template(title="Delete File")
