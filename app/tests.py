@@ -17,14 +17,30 @@ class RenderbotTestCase(unittest.TestCase):
         self.app_context.push()
         self.SQLALCHEMY_TRACK_MODIFICATION = False
 
-    def test_empty_db(self):
+    def test_home_dir(self):
         c = self.app.test_client()
         rv = c.get('/')
 
-    def test_registration_form(self):
-        # for problems here: http://stackoverflow.com/questions/17375340/testing-code-that-requires-a-flask-app-or-request-context
-        with self.app.app_context():
-            r = RegistrationForm()
+    def login(self, email, password):
+        return self.app.test_client().post('/login', data=dict(
+            email=email,
+            password=password
+        ), follow_redirects=True)
+
+    def logout(self):
+        return self.app.test_client().get('/logout', follow_redirects=True)
+
+    def test_login(self):
+        # rv = self.login('test@test.com', 'test')
+        rv = self.login('fake@fake.com', 'nope')
+        print(rv.data)
+        # assert False
+        assert b'All Rights Reserved' in rv.data
+
+    # def test_registration_form(self):
+    #     # for problems here: http://stackoverflow.com/questions/17375340/testing-code-that-requires-a-flask-app-or-request-context
+    #     with self.app.app_context():
+    #         r = RegistrationForm()
 
 if __name__ == '__main__':
     unittest.main()
