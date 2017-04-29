@@ -19,6 +19,7 @@
                   <th width="15%"> File Name </th>
                   <th width="15%"> View </th>
                   <th width="15%"> Delete </th>
+                  <th width="15%"> Render </th>
                 </tr>
               </thead>
               <tbody>
@@ -33,6 +34,11 @@
                   <td>
                     <a href="{{ url_for('auth.delete_upload', id=upload.id) }}">
                       <i class="fa fa-trash"></i> Delete
+                    </a>
+                  </td>
+                  <td>
+                    <a href="{{ url_for('auth.create_analysis', id=upload.id) }}">
+                      <i class="fa fa-area-chart"></i> Render
                     </a>
                   </td>
                 </tr>

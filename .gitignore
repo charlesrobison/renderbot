@@ -1,3 +1,10 @@
+<<<<<<< HEAD
+.ipynb_*
+/renderenv
+__pycache__/
+||||||| merged common ancestors
+.ipynb_*
+=======
 .ipynb_*
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -97,3 +104,4 @@ ENV/
 
 # mkdocs documentation
 /site
+>>>>>>> origin/master
