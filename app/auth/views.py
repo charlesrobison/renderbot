@@ -10,7 +10,7 @@ import app
 from . import auth
 from .forms import LoginForm, RegistrationForm, UploadForm
 from .. import db
-from ..models import User, File
+from ..models import Analysis, User, File
 
 # Global variables
 ALLOWED_EXTENSIONS = set(['csv', 'xls', 'xlsx'])
@@ -101,7 +101,7 @@ def logout():
 @login_required
 def upload_file():
     """
-    Handle file uploads 
+    Handle file uploads
     """
 
     upload_file = True
@@ -194,3 +194,12 @@ def delete_upload(id):
     # redirect to the uploads page
     return redirect(url_for('auth.list_uploads'))
 
+
+@auth.route('/analyses/view/<int:id>', methods=['GET'])
+@login_required
+def create_analysis(id):
+    """
+    View a pre-created analysis
+    """
+    # this is a placeholder template
+    return render_template('auth/analyses/render.html')
