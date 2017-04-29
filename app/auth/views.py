@@ -201,5 +201,62 @@ def create_analysis(id):
     """
     View a pre-created analysis
     """
+    # Get file path from database by id
+    file = File.query.get_or_404(id).file
+
+    # Get filename for template
+    file_name = os.path.basename(file)
+    # Get file path and file extension
+    file_path, file_extension = os.path.splitext(file_name)
+
+    # Get file from server to process into data frame
+    if file_extension == '.csv':
+        # Load CSV file type
+        df = pd.DataFrame(pd.read_csv(file, encoding="ISO-8859-1", parse_dates=['Order Date']))
+    else:
+        # Load files with excel based file extensions
+        df = pd.DataFrame(pd.read_excel(file, encoding="ISO-8859-1", parse_dates=['Order Date']))
+
+    # Add columns for sales where profit is plus or zero to negative
+    df_sales = df
+    df_sales['Profitable'] = df['Sales'].where(df['Profit'] > 0, 0)
+    df_sales['Unprofitable'] = df['Sales'].where(df['Profit'] <= 0, 0)
+
+    # Filter only columns needed
+    df_sales = df_sales[['Order Date', 'Customer Segment', 'Profit', 'Sales', 'Profitable', 'Unprofitable']]
+
+    # Group by Segment
+    df_sales2 = df_sales.groupby(['Customer Segment', 'Order Date']).sum()
+    df_sales2 = df_sales2.reset_index(drop=False)
+
+    # Group by Month
+    df_mo = df_sales2.set_index('Order Date').groupby('Customer Segment').resample('M').sum()
+    df_mo = df_mo.reset_index(drop=False)
+
+    # Change column header to remove space for using as index
+    df_segs = df_mo.rename(columns={'Customer Segment': 'Segment'})
+
+    # Setting unique axis to pick up single Customer Segment
+    cons_df = df_segs[df_segs['Segment']==df_segs.Segment.unique()[0]]
+
+    # Filter only columns for chart
+    cons_df_area = cons_df[['Order Date', 'Profitable', 'Unprofitable']]
+
+    # Reset index for chart axis labels
+    cons_df_area = cons_df_area.set_index(['Order Date']).resample('M').sum()
+
+    # When adding stack=True, Y labels skew.  Fixed with NumeralTickFormatter
+    from bokeh.charts import Area, show
+    from bokeh.models import NumeralTickFormatter, HoverTool
+    title1 = df_segs.Segment.unique()[0]
+    cons_area = Area(cons_df_area, title=title1, legend="top_left",
+                xlabel='', ylabel='Profit', plot_width=700, plot_height=400,
+                stack=True, 
+                    )
+    cons_area.yaxis[0].formatter = NumeralTickFormatter(format="0,00")
+
+    area_output = output_file('area.html')
+
+
     # this is a placeholder template
-    return render_template('auth/analyses/render.html')
+    return render_template('auth/analyses/render.html', data=area_output, title="Area Chart")
