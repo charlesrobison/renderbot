@@ -3,6 +3,9 @@ from flask import flash, redirect, render_template, url_for, request, send_from_
 from flask_login import login_required, login_user, logout_user, current_user
 import pandas as pd
 from werkzeug.utils import secure_filename
+from bokeh.charts import Area, show
+from bokeh.models import NumeralTickFormatter, HoverTool
+from bokeh.io import output_file
 import os
 
 # Local Imports
@@ -237,7 +240,7 @@ def create_analysis(id):
     df_segs = df_mo.rename(columns={'Customer Segment': 'Segment'})
 
     # Setting unique axis to pick up single Customer Segment
-    cons_df = df_segs[df_segs['Segment']==df_segs.Segment.unique()[0]]
+    cons_df = df_segs[df_segs['Segment'] == df_segs.Segment.unique()[0]]
 
     # Filter only columns for chart
     cons_df_area = cons_df[['Order Date', 'Profitable', 'Unprofitable']]
@@ -246,8 +249,6 @@ def create_analysis(id):
     cons_df_area = cons_df_area.set_index(['Order Date']).resample('M').sum()
 
     # When adding stack=True, Y labels skew.  Fixed with NumeralTickFormatter
-    from bokeh.charts import Area, show
-    from bokeh.models import NumeralTickFormatter, HoverTool
     title1 = df_segs.Segment.unique()[0]
     cons_area = Area(cons_df_area, title=title1, legend="top_left",
                 xlabel='', ylabel='Profit', plot_width=700, plot_height=400,
@@ -255,8 +256,7 @@ def create_analysis(id):
                     )
     cons_area.yaxis[0].formatter = NumeralTickFormatter(format="0,00")
 
-    area_output = output_file('area.html')
-
+    data = show(cons_area)
 
     # this is a placeholder template
-    return render_template('auth/analyses/render.html', data=area_output, title="Area Chart")
+    return render_template('auth/analyses/render.html', data=data, title="Area Chart")
