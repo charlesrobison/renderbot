@@ -1,0 +1,13 @@
+{% import "bootstrap/wtf.html" as wtf %}
+{% extends "base.html" %}
+{% block title %}Upload File{% endblock %}
+{% block body %}
+<form action="/uploads/upload" method="post" enctype=multipart/form-data>
+<div class="content-section">
+  <div class="center">
+    <h1>Upload a Data Set</h1>
+    <br/>
+    {{ wtf.quick_form(form) }}
+  </div>
+</div>
+{% endblock %}

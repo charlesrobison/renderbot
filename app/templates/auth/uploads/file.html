@@ -1,0 +1,12 @@
+{% import "bootstrap/wtf.html" as wtf %}
+{% extends "base.html" %}
+{% block title %}File Preview{% endblock %}
+{% block body %}
+<div class="content-section">
+  <div class="center">
+    <h1>{{ name }}</h1>
+    <br/>
+    {{ data|safe }}
+  </div>
+</div>
+{% endblock %}
