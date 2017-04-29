@@ -11,7 +11,8 @@ class DevelopmentConfig(Config):
     Development configurations
     """
 
-    DEBUG = True
+    # DEBUG = True
+    DEBUG = False
     SQLALCHEMY_ECHO = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -23,7 +24,14 @@ class ProductionConfig(Config):
 
     DEBUG = False
 
+
+class TestingConfig(Config):
+    TESTING = True
+    SQLALCHEMY_ECHO = True
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
 app_config = {
     'development': DevelopmentConfig,
-    'production': ProductionConfig
+    'production': ProductionConfig,
+    'testing': TestingConfig
 }
