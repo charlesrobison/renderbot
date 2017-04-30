@@ -1,8 +1,6 @@
 from mimetypes import MimeTypes
 import pandas as pd
 
-# this needs to be a view
-# so we have a view for uploaded file display
 class UploadedFile():
     """
     Convert file to pandas data frame or return error for invalid file
