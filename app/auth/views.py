@@ -7,6 +7,7 @@ from bokeh.charts import Area, show
 from bokeh.models import NumeralTickFormatter, HoverTool
 from bokeh.io import output_file
 import os
+import copy
 
 # Local Imports
 import app
@@ -14,17 +15,18 @@ from . import auth
 from .forms import LoginForm, RegistrationForm, UploadForm
 from .. import db
 from ..models import Analysis, User, File
+from ..uploads.file_validate import detect_file_type, has_valid_headers
 
 # Global variables
-ALLOWED_EXTENSIONS = set(['csv', 'xls', 'xlsx'])
+ALLOWED_EXTENSIONS = set(['csv', 'tsv', 'xls', 'xlsx'])
 EXCEL_EXTENSIONS = ['.xls', '.xlsx']
 UPLOAD_FOLDER = '/tmp/renderbot_uploads'
 
 
 #  Determine if allowed file type
 def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+    return (('.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS), filename.rsplit('.', 1)[1])
 
 
 @auth.route('/register', methods=['GET', 'POST'])
@@ -100,6 +102,70 @@ def logout():
 #  File Upload Views
 
 
+# @auth.route('/uploads/upload', methods=['GET', 'POST'])
+# @login_required
+# def upload_file():
+#     """
+#     Handle file uploads
+#     """
+#
+#     upload_file = True
+#
+#     form = UploadForm()
+#
+#     if request.method == 'POST':
+#         # this is a FileStorage object
+#         file = request.files['file']
+#         # pull this out into a function
+#         # valid_file_types = {'text/csv': 'csv', 'text/tab-separated-values': 'tsv', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx'}
+#         # if file.mimetype in valid_file_types:
+#         #     file_type = valid_file_types[file.mimetype]
+#         # else:
+#         #     raise TypeError
+#
+#         # but this causes the file to be empty
+#         # content = request.files['file'].read()
+#         # if content:
+#         #     pass
+#         # else:
+#         #     raise TypeError
+#         filename = secure_filename(file.filename)
+#         file_path = os.path.join(UPLOAD_FOLDER, filename)
+#         file.save(file_path)
+#
+#         # file_type = detect_file_type(file)
+#
+#         # save to app server (adjust path at top)
+#         # if file_type:
+#         # allowed = allowed_file(file.filename)
+#         # if file and allowed[0]:
+#         if file:
+#             # is_valid = has_valid_headers(file, allowed[1],
+#             #                              ['Order Date', 'Customer Segment', 'Profit', 'Sales',
+#             #                               'Product Category'])
+#             # if not is_valid:
+#             #     flash('That file is invalid')
+#             filename = secure_filename(file.filename)
+#             file_path = os.path.join(UPLOAD_FOLDER, filename)
+#             file.save(file_path)
+#
+#             # add file name to the database
+#             form_filename = File(file=file_path,
+#                                  user_id=current_user.id)
+#             db.session.add(form_filename)
+#             db.session.commit()
+#             flash('You have uploaded {}.'.format(filename))
+#             return redirect(url_for('auth.list_uploads'))
+#         else:
+#             flash('File not supported. Please upload a CSV, TSV, or Excel spreadsheet.')
+#             return redirect(url_for('auth.list_uploads'))
+#
+#     # load upload template
+#     return render_template('auth/uploads/upload.html',
+#                            action="Upload",
+#                            upload_file=upload_file,
+#                            form=form, title='Upload File')
+
 @auth.route('/uploads/upload', methods=['GET', 'POST'])
 @login_required
 def upload_file():
@@ -113,9 +179,16 @@ def upload_file():
 
     if request.method == 'POST':
         file = request.files['file']
-
+        valid_file_types = {'text/csv': 'csv', 'text/tab-separated-values': 'tsv', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx'}
+        mimetype = file.mimetype
+        if mimetype in valid_file_types:
+            file_type = valid_file_types[mimetype]
+            file_copy = copy.deepcopy(file).read()
+            is_valid = has_valid_headers(file_copy, file_type, ['Order Date', 'Customer Segment', 'Profit', 'Sales', 'Product Category'])
+            if not is_valid:
+                raise TypeError
         # save to app server (adjust path at top)
-        if file and allowed_file(file.filename):
+        # if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file_path = os.path.join(UPLOAD_FOLDER, filename)
             file.save(file_path)
@@ -252,7 +325,7 @@ def create_analysis(id):
     title1 = df_segs.Segment.unique()[0]
     cons_area = Area(cons_df_area, title=title1, legend="top_left",
                 xlabel='', ylabel='Profit', plot_width=700, plot_height=400,
-                stack=True, 
+                stack=True,
                     )
     cons_area.yaxis[0].formatter = NumeralTickFormatter(format="0,00")
 
