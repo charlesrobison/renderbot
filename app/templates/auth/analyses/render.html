@@ -1,0 +1,10 @@
+{% import "bootstrap/wtf.html" as wtf %}
+{% extends "base.html" %}
+{% block title %}Rendered Analysis{% endblock %}
+{% block body %}
+<div class="content-section">
+  <div class="center">
+    {{ data|safe }}
+  </div>
+</div>
+{% endblock %}
