@@ -69,8 +69,7 @@ class File(db.Model):
     analysis = relationship('Analysis', uselist=False, backref='files')
 
     def __repr__(self):
-        return '<File: {}>'.format(self.file)
-
+        return '<File: {}>'.format(self.name)
 
 class Analysis(db.Model):
     """
