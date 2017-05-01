@@ -4,8 +4,9 @@ from flask_login import login_required, login_user, logout_user, current_user
 import pandas as pd
 from werkzeug.utils import secure_filename
 from bokeh.charts import Area, show
+from bokeh.embed import file_html
 from bokeh.models import NumeralTickFormatter, HoverTool
-from bokeh.io import output_file
+from bokeh.resources import CDN
 import os
 import copy
 
@@ -151,7 +152,6 @@ def list_uploads():
     return render_template('auth/uploads/uploads.html',
                            uploads=uploads, title="Uploads")
 
-
 @auth.route('/uploads/upload/<id>')
 @login_required
 def single_file(id):
@@ -259,8 +259,7 @@ def create_analysis(id):
                 stack=True,
                     )
     cons_area.yaxis[0].formatter = NumeralTickFormatter(format="0,00")
-
-    data = show(cons_area)
+    html = file_html(cons_area, CDN, "html")
 
     # this is a placeholder template
-    return render_template('auth/analyses/render.html', data=data, title="Area Chart")
+    return render_template('auth/analyses/render.html', data=html, title="Area Chart")
