@@ -1,40 +1,32 @@
 from mimetypes import MimeTypes
 import pandas as pd
 
-class UploadedFile():
+
+def detect_file_type(file):
     """
-    Convert file to pandas data frame or return error for invalid file
+    Detect file type or raise an error if file type is unsupported
     """
-    def __init__(self, file_path):
-        self.file_path = file_path
+    valid_file_types = {'text/csv': 'csv', 'text/tab-separated-values': 'tsv', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx'}
+    mime = MimeTypes()
+    file_type = mime.guess_type(file)
+    print(file_type)
+    if file_type[0] not in valid_file_types:
+        raise TypeError
+    else:
+        file_type = valid_file_types[file_type]
+    return file_type
 
 
-    def detect_file_type(self):
-        """
-        Detect file type or raise an error if file type is unsupported
-        """
-        valid_file_types = {'text/csv': 'csv',
-                            'text/tab-separated-values': 'tsv',
-                            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx'}
-        mime = MimeTypes()
-        file_type = mime.guess_type(self.file_path)[0]
-        if file_type not in valid_file_types:
-            raise TypeError
-        else:
-            self.file_type = valid_file_types[file_type]
-
-    def convert_to_dataframe(self):
-        """
-        Convert file to Pandas dataframe
-        """
-        if self.file_type == 'csv':
-            self.df = pd.read_csv(self.file_path)
-        elif self.file_type == 'tsv':
-            self.df = pd.read_csv(self.file_path, sep='\t')
-        elif self.file_type == 'xlsx':
-            self.df = pd.read_excel(self.file_path)
-
-    def validate_data(self):
-        # this is dependent on what we can use it for
-        # is this decided at upload time or at analysis time?
-        yield
+def has_valid_headers(file, file_type, header_list):
+    # this is a file obejct, it assumes a file path
+    if file_type == 'csv':
+        # print(pd.read_csv(file))
+        headers = pd.read_csv(file, encoding='ISO-8859-1').columns.values.tolist()
+    elif file_type == 'tsv':
+        headers = pd.read_csv(file, encoding='ISO-8859-1', sep='\t').columns.values.tolist()
+    elif file_type == 'xlsx':
+        headers = pd.read_excel(file, encoding='ISO-8859-1').columns.values.tolist()
+    for header in header_list:
+        if header not in headers:
+            return False
+    return True
