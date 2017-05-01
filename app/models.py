@@ -65,6 +65,7 @@ class File(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     file = db.Column(db.String(200), index=True)
+    file_type = db.Column(db.String(200), index=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     analysis = relationship('Analysis', uselist=False, backref='files')
 
