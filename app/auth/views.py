@@ -17,6 +17,7 @@ from .forms import LoginForm, RegistrationForm, UploadForm
 from .. import db
 from ..models import Analysis, User, File
 from .uploads.file_validate import detect_file_type, has_valid_headers
+from .utilities import create_df, create_df_with_parse_date
 
 # Global variables
 UPLOAD_FOLDER = '/tmp/renderbot_uploads'
@@ -168,15 +169,7 @@ def single_file(id):
     # file_path, file_extension = os.path.splitext(file_name)
     file_type = File.query.get_or_404(id).file_type
 
-    # Get file from server to process into data frame
-    if file_type == 'csv':
-        # Load CSV file type
-        df = pd.DataFrame(pd.read_csv(file, encoding='ISO-8859-1'))
-    elif file_type == 'tsv':
-        df = pd.DataFrame(pd.read_csv(file, encoding='ISO-8859-1', sep='\t'))
-    else:
-        # Load files with excel based file extensions
-        df = pd.DataFrame(pd.read_excel(file, encoding='ISO-8859-1'))
+    df = create_df(file, file_type)
 
     # Render data frame as sample of entire data set
     df_head = df.head()
@@ -213,16 +206,8 @@ def create_analysis(id):
 
     # Get filename for template
     file_name = os.path.basename(file)
-    # Get file path and file extension
-    file_path, file_extension = os.path.splitext(file_name)
-
-    # Get file from server to process into data frame
-    if file_extension == '.csv':
-        # Load CSV file type
-        df = pd.DataFrame(pd.read_csv(file, encoding="ISO-8859-1", parse_dates=['Order Date']))
-    else:
-        # Load files with excel based file extensions
-        df = pd.DataFrame(pd.read_excel(file, encoding="ISO-8859-1", parse_dates=['Order Date']))
+    file_type = File.query.get_or_404(id).file_type
+    df = create_df_with_parse_date(file, file_type, 'Order Date')
 
     # Add columns for sales where profit is plus or zero to negative
     df_sales = df
