@@ -15,17 +15,10 @@ from . import auth
 from .forms import LoginForm, RegistrationForm, UploadForm
 from .. import db
 from ..models import Analysis, User, File
-from ..uploads.file_validate import detect_file_type, has_valid_headers
+from .uploads.file_validate import detect_file_type, has_valid_headers
 
 # Global variables
 UPLOAD_FOLDER = '/tmp/renderbot_uploads'
-
-
-#  Determine if allowed file type
-def allowed_file(filename):
-    return (('.' in filename and \
-           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS), filename.rsplit('.', 1)[1])
-
 
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
