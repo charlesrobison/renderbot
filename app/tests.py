@@ -1,7 +1,10 @@
 import app.__init__ as app_init
+from app.__init__ import db
 from app.auth.forms import RegistrationForm
 from app.models import User
+from config import app_config
 from flask import Flask
+from flask import url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_testing import TestCase
 import os
@@ -28,74 +31,79 @@ class RenderbotTestCase(TestCase):
         return app
 
     def setUp(self):
-        self.db = SQLAlchemy()
+        self.c = self.app.test_client()
+        db.init_app(self.app)
+        # db.create_all(app=app_init.create_app('testing'))
+        db.create_all()
+        self.first_user =  User(email="test@test.com",
+                        username="Test",
+                        first_name="Tom",
+                        last_name="Test",
+                        password="test")
+        self.second_user =  User(email="tomtest@test.com",
+                        username="TomTest",
+                        first_name="Tom",
+                        last_name="Test",
+                        password="test")
+        self.duplicate_user =  User(email="test@test.com",
+                        username="Test2",
+                        first_name="Tom2",
+                        last_name="Test",
+                        password="test")
+        db.session.add(self.first_user)
 
     def tearDown(self):
-        self.db.session.remove()
-        self.db.drop_all()
+        db.session.remove()
+        db.drop_all()
+
+    def login(self, email, password):
+        return self.c.post('/login', data=dict(
+            email=email,
+            password=password
+        ), follow_redirects=True)
+
+    def logout(self):
+        return self.app.test_client().get('/logout', follow_redirects=True)
+
 
     # tests of individual pages
 
     def test_home_dir(self):
-        c = self.app.test_client()
-        rv = c.get('/')
+        rv = self.c.get('/')
         assert b'Renderbot' in rv.data
 
+    def test_db_set_up(self):
+        assert self.first_user in db.session
+
     # test database interaction
-    def test_user_creation(self):
-        user = User(email="test@test.com",
-                    username="Test",
-                    first_name="Tom",
-                    last_name="Test",
-                    password="test")
-        self.db.session.add(user)
-        assert user in self.db.session
+    def test_db_user_creation(self):
+        db.session.add(self.second_user)
+        assert self.second_user in db.session
 
-    # test rendering of form submissions
-
-# class RenderbotTestCase(unittest.TestCase):
-#
-#     def test_home_dir(self):
-#         c = self.app.test_client()
-#         rv = c.get('/')
-#         assert b'Renderbot' in rv.data
-#
-#     def test_create_user(self):
-#         c = self.app.test_client()
-#         user = User(email="test@test.com",
-#                     username="Test",
-#                     first_name="Tom",
-#                     last_name="Test",
-#                     password="test")
-#         self.db.session.add(user)
-#         self.db.session.commit()
-        # self.db.session.delete(user)
-
-    #
-    # def login(self, email, password):
-    #     c = self.app.test_client()
-    #     return c.post('/login', data=dict(
-    #         email=email,
-    #         password=password
-    #     ), follow_redirects=True)
-    #
-    # def logout(self):
-    #     return self.app.test_client().get('/logout', follow_redirects=True)
-    #
-    # def test_login(self):
-    #     rv = self.login('test@test.com', 'test')
-    #     assert b'Hi,' in rv.data
-        # print(rv.data)
-        # rv = self.login('bob', 'joe')
-        # assert b'Invalid email address.' in rv.data
-        # rv = self.login('test@test.com', 'fake')
-        # print(rv.data)
-        # assert b'Invalid email or password.' in rv.data
+    def test_login(self):
+        rv = self.c.post('/login', data=dict(
+            email="test@test.com",
+            password="test"
+        ), follow_redirects=True)
+        print(rv.data)
+        # assert b'Hi,' in rv.data
+        self.assert_redirects(rv, url_for('home.dashboard'))
 
     # def test_logout(self):
     #     rv = self.logout()
     #     assert b'You have successfully been logged out.' in rv.data
 
+    # def test_login(self):
+    #     rv = self.login('test@test.com', 'test')
+    #     assert b'Hi,' in rv.data
+    #     print(rv.data)
+    #     rv = self.login('bob', 'joe')
+    #     assert b'Invalid email address.' in rv.data
+    #     rv = self.login('test@test.com', 'fake')
+    #     print(rv.data)
+    #     assert b'Invalid email or password.' in rv.data
+
+    # test rendering of form submissions
 
     # def test_registration_form(self):
     #     # for problems here: http://stackoverflow.com/questions/17375340/testing-code-that-requires-a-flask-app-or-request-context
