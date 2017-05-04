@@ -240,8 +240,8 @@ def create_analysis(id):
     # When adding stack=True, Y labels skew.  Fixed with NumeralTickFormatter
     title1 = df_segs.Segment.unique()[0]
     cons_area = Area(cons_df_area, title=title1, legend="top_left",
-                xlabel='', ylabel='Profit', plot_width=700, plot_height=400,
-                stack=True,
+                xlabel='', ylabel='Sales', plot_width=700, plot_height=400,
+                stack=True, color=['#3288bd', '#99d594'],
                     )
     cons_area.yaxis[0].formatter = NumeralTickFormatter(format="0,00")
     html = file_html(cons_area, CDN, "html")
