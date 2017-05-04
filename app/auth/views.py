@@ -3,25 +3,24 @@ from flask import flash, redirect, render_template, url_for, request, send_from_
 from flask_login import login_required, login_user, logout_user, current_user
 import pandas as pd
 from werkzeug.utils import secure_filename
+from bokeh.charts import Area, show
+from bokeh.embed import file_html
+from bokeh.models import NumeralTickFormatter, HoverTool
+from bokeh.resources import CDN
 import os
+import copy
 
 # Local Imports
 import app
 from . import auth
 from .forms import LoginForm, RegistrationForm, UploadForm
 from .. import db
-from ..models import User, File
+from ..models import Analysis, User, File
+from .uploads.file_validate import detect_file_type, has_valid_headers
+from .utilities import create_df, create_df_with_parse_date
 
 # Global variables
-ALLOWED_EXTENSIONS = set(['csv', 'xls', 'xlsx', 'tsv'])
 UPLOAD_FOLDER = '/tmp/renderbot_uploads'
-
-
-#  Determine if allowed file type
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
-
 
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
@@ -94,8 +93,6 @@ def logout():
 
 
 #  File Upload Views
-
-
 @auth.route('/uploads/upload', methods=['GET', 'POST'])
 @login_required
 def upload_file():
@@ -109,19 +106,32 @@ def upload_file():
 
     if request.method == 'POST':
         file = request.files['file']
-
-        # save to app server (adjust path at top)
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file_path = os.path.join(UPLOAD_FOLDER, filename)
-            file.save(file_path)
-
-            # add file name to the database
-            form_filename = File(file=file_path,
-                                 user_id=current_user.id)
-            db.session.add(form_filename)
-            db.session.commit()
-            flash('You have uploaded {}.'.format(filename))
+        valid_file_types = {'text/csv': 'csv', 'text/tab-separated-values': 'tsv', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx'}
+        mimetype = file.mimetype
+        if mimetype in valid_file_types:
+            file_type = valid_file_types[mimetype]
+            # we need to change this if we later enable other analyses
+            column_headers = ['Order Date', 'Customer Segment', 'Profit', 'Sales', 'Product Category']
+            is_valid = has_valid_headers(file.stream, file_type, column_headers)
+            if not is_valid:
+                flash('This file has the wrong file headers. Please upload a file with the following headers: {}'.format(', '.join(column_headers)))
+                return redirect(url_for('auth.list_uploads'))
+            else:
+                file.seek(0)
+                # save to app server (adjust path at top)
+                filename = secure_filename(file.filename)
+                file_path = os.path.join(UPLOAD_FOLDER, filename)
+                file.save(file_path)
+                # add file name to the database
+                form_filename = File(file=file_path,
+                                     user_id=current_user.id,
+                                     file_type=file_type)
+                db.session.add(form_filename)
+                db.session.commit()
+                flash('You have uploaded {}.'.format(filename))
+                return redirect(url_for('auth.list_uploads'))
+        else:
+            flash('File not supported. Please upload a CSV, TSV, or Excel file type.')
             return redirect(url_for('auth.list_uploads'))
 
     # load upload template
@@ -155,12 +165,17 @@ def single_file(id):
 
     # Get filename for template
     file_name = os.path.basename(file)
+    # Get file path and file extension
+    # file_path, file_extension = os.path.splitext(file_name)
+    file_type = File.query.get_or_404(id).file_type
 
-    # Get file from server to process into data frame
-    df = pd.DataFrame(pd.read_csv(file, encoding="ISO-8859-1"))
+    df = create_df(file, file_type)
+
+    # Render data frame as sample of entire data set
+    df_head = df.head()
 
     return render_template('auth/uploads/file.html', name=file_name,
-                           data=df.to_html(),
+                           data=df_head.to_html(),
                            title="Data Preview")
 
 
@@ -179,4 +194,57 @@ def delete_upload(id):
     # redirect to the uploads page
     return redirect(url_for('auth.list_uploads'))
 
-    return render_template(title="Delete File")
+
+@auth.route('/analyses/view/<int:id>', methods=['GET'])
+@login_required
+def create_analysis(id):
+    """
+    View a pre-created analysis
+    """
+    # Get file path from database by id
+    file = File.query.get_or_404(id).file
+
+    # Get filename for template
+    file_name = os.path.basename(file)
+    file_type = File.query.get_or_404(id).file_type
+    df = create_df_with_parse_date(file, file_type, 'Order Date')
+
+    # Add columns for sales where profit is plus or zero to negative
+    df_sales = df
+    df_sales['Profitable'] = df['Sales'].where(df['Profit'] > 0, 0)
+    df_sales['Unprofitable'] = df['Sales'].where(df['Profit'] <= 0, 0)
+
+    # Filter only columns needed
+    df_sales = df_sales[['Order Date', 'Customer Segment', 'Profit', 'Sales', 'Profitable', 'Unprofitable']]
+
+    # Group by Segment
+    df_sales2 = df_sales.groupby(['Customer Segment', 'Order Date']).sum()
+    df_sales2 = df_sales2.reset_index(drop=False)
+
+    # Group by Month
+    df_mo = df_sales2.set_index('Order Date').groupby('Customer Segment').resample('M').sum()
+    df_mo = df_mo.reset_index(drop=False)
+
+    # Change column header to remove space for using as index
+    df_segs = df_mo.rename(columns={'Customer Segment': 'Segment'})
+
+    # Setting unique axis to pick up single Customer Segment
+    cons_df = df_segs[df_segs['Segment'] == df_segs.Segment.unique()[0]]
+
+    # Filter only columns for chart
+    cons_df_area = cons_df[['Order Date', 'Profitable', 'Unprofitable']]
+
+    # Reset index for chart axis labels
+    cons_df_area = cons_df_area.set_index(['Order Date']).resample('M').sum()
+
+    # When adding stack=True, Y labels skew.  Fixed with NumeralTickFormatter
+    title1 = df_segs.Segment.unique()[0]
+    cons_area = Area(cons_df_area, title=title1, legend="top_left",
+                xlabel='', ylabel='Profit', plot_width=700, plot_height=400,
+                stack=True,
+                    )
+    cons_area.yaxis[0].formatter = NumeralTickFormatter(format="0,00")
+    html = file_html(cons_area, CDN, "html")
+
+    # this is a placeholder template
+    return render_template('auth/analyses/render.html', data=html, title="Area Chart")
