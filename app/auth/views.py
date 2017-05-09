@@ -22,6 +22,7 @@ from .utilities import create_df, create_df_with_parse_date
 # Global variables
 UPLOAD_FOLDER = '/tmp/renderbot_uploads'
 
+
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
     """
@@ -103,7 +104,6 @@ def upload_file():
     upload_file = True
 
     form = UploadForm()
-
     if request.method == 'POST':
         file = request.files['file']
         valid_file_types = {'text/csv': 'csv', 'text/tab-separated-values': 'tsv', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx'}
@@ -117,6 +117,7 @@ def upload_file():
                 flash('This file has the wrong file headers. Please upload a file with the following headers: {}'.format(', '.join(column_headers)))
                 return redirect(url_for('auth.list_uploads'))
             else:
+                # save_file(file, file_type)
                 file.seek(0)
                 # save to app server (adjust path at top)
                 filename = secure_filename(file.filename)

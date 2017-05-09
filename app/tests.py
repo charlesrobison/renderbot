@@ -1,9 +1,4 @@
-import app.__init__ as app_init
-from app.__init__ import db
-from app.auth.forms import RegistrationForm
-from app.models import User
-from app.auth.uploads import file_validate as fv
-from config import app_config
+# Imports
 from flask import Flask
 from flask import url_for
 from flask_sqlalchemy import SQLAlchemy
@@ -13,6 +8,16 @@ import os
 import pytest
 import tempfile
 import unittest
+
+# Local imports
+import app.__init__ as app_init
+from app.__init__ import db
+from app.auth.forms import RegistrationForm
+from app.models import User
+from app.auth.uploads import file_validate as fv
+from config import app_config
+import app.auth.utilities as utilities
+
 
 # to test, run: $python3 -m unittest discover
 # or run: $python3 -m pytest tests.py
@@ -151,7 +156,34 @@ class RenderbotTestCase(TestCase):
         assert mimetype == 'tsv', 'File type detector can\'t recognize a TSV'
 
     # test that only files with correct headers are validated
+    def test_correct_headers(self):
+        is_valid = fv.has_valid_headers('app/tests/store_data.csv', 'csv', ['Order Date', 'Customer Segment', 'Profit', 'Sales', 'Product Category'])
+        assert is_valid == True, 'Your headers don\'t validate'
+        is_valid = fv.has_valid_headers('app/tests/store_data.tsv', 'tsv', ['Order Date', 'Customer Segment', 'Profit', 'Sales', 'Product Category'])
+        assert is_valid == True, 'Your headers don\'t validate'
+        is_valid = fv.has_valid_headers('app/tests/store_data.xlsx', 'xlsx', ['Order Date', 'Customer Segment', 'Profit', 'Sales', 'Product Category'])
+        assert is_valid == True, 'Your headers don\'t validate'
 
+    def test_incorrect_header(self):
+        is_valid = fv.has_valid_headers('app/tests/bad_data.csv', 'csv', ['Order Date', 'Customer Segment', 'Profit', 'Sales', 'Product Category'])
+        assert is_valid == False, 'You\'re validating bad headers'
+        is_valid = fv.has_valid_headers('app/tests/bad_data.tsv', 'tsv', ['Order Date', 'Customer Segment', 'Profit', 'Sales', 'Product Category'])
+        assert is_valid == False, 'You\'re validating bad headers'
+        is_valid = fv.has_valid_headers('app/tests/bad_data.xlsx', 'xlsx', ['Order Date', 'Customer Segment', 'Profit', 'Sales', 'Product Category'])
+        assert is_valid == False, 'You\'re validating bad headers'
+
+    # test that df creation works
+    def test_df_creation(self):
+        df = utilities.create_df('app/tests/store_data.csv', 'csv')
+        headers = ['Row ID', 'Order Priority', 'Discount', 'Unit Price', 'Shipping Cost', 'Customer ID', 'Customer Name', 'Ship Mode', 'Customer Segment', 'Product Category', 'Product Sub-Category', 'Product Container', 'Product Name', 'Product Base Margin', 'Country', 'Region', 'State or Province', 'City', 'Postal Code', 'Order Date', 'Ship Date', 'Profit', 'Quantity ordered new', 'Sales', 'Order ID']
+        assert df.columns.values.tolist() == headers, 'Cannot convert file to dataframe'
+
+    # test that creating sorted df works
+    def test_sorted_df(self):
+        # this isn't working properly, doesn't seem to be sorting
+        df = utilities.create_df_with_parse_date('app/tests/store_data.csv', 'csv', 'Ship Date')
+        print(df.head())
+        # assert df.head()
 
 if __name__ == '__main__':
     unittest.main()
