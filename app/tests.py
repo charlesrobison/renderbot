@@ -71,20 +71,20 @@ class RenderbotTestCase(TestCase):
 
     def test_home_dir(self):
         rv = self.c.get('/')
-        assert b'Renderbot' in rv.data
+        assert b'Renderbot' in rv.data, 'There\'s something wrong with your home page'
 
-    # test dashboard while not logged in
+    # test that you can't access dashboard while not logged in
     def test_unverified_dashboard(self):
         rv = self.c.get('/dashboard', follow_redirects=True)
-        assert b'You must be logged in to access this page.' in rv.data
+        assert b'You must be logged in to access this page.' in rv.data, 'You should not be able to access the dashboard without login'
 
     def test_registration_page(self):
         rv = self.c.get('/register')
-        assert b'Register for an Account' in rv.data
+        assert b'Register for an Account' in rv.data, 'Your registration page is broken'
 
     def test_login_pate(self):
         rv = self.c.get('/login')
-        assert b'Login to your account' in rv.data
+        assert b'Login to your account' in rv.data, 'The login page doesn\'t render properly'
 
     # def test_login(self):
     #     with self.c:
@@ -95,13 +95,14 @@ class RenderbotTestCase(TestCase):
     #         print(rv.data)
     #         # assert b'Hi,' in rv.data
     #         # print(current_user)
-    #         self.assert_redirects(rv, url_for('home.dashboard'))
+    #         self.assert_redirects(rv, url_for('home.dashboard')), 'Unable to login'
 
     # def test_logout(self):
     #     rv = self.logout()
-    #     assert b'You have successfully been logged out.' in rv.data
+    #     assert b'You have successfully been logged out.' in rv.data, 'Unable to log out'
 
-    # def test_login(self):
+    # test that logging in a fake user doesn't work
+    # def test_bad_login(self):
     #     rv = self.login('test@test.com', 'test')
     #     assert b'Hi,' in rv.data
     #     print(rv.data)
@@ -109,7 +110,7 @@ class RenderbotTestCase(TestCase):
     #     assert b'Invalid email address.' in rv.data
     #     rv = self.login('test@test.com', 'fake')
     #     print(rv.data)
-    #     assert b'Invalid email or password.' in rv.data
+    #     assert b'Invalid email or password.' in rv.data, 'You managed to log in a fake user'
 
     # test rendering of form submissions
 
@@ -122,21 +123,35 @@ class RenderbotTestCase(TestCase):
 
     # test that database is set up properly
     def test_db_set_up(self):
-        assert self.first_user in db.session
+        assert self.first_user in db.session, 'Users are missing from your DB'
 
     # test database interaction
     def test_db_user_creation(self):
         db.session.add(self.second_user)
-        assert self.second_user in db.session
+        assert self.second_user in db.session, 'Unable to add user to DB'
 
     def test_incorrect_user(self):
-        assert self.duplicate_user not in db.session
+        assert self.duplicate_user not in db.session, 'Nonexistant users are popping up in your DB!'
 
-    def test_file_open(self):
-        with open('auth/uploads/test.txt', 'r') as f:
-            r = f.read()
-        print(os.getcwd())
-        assert 'test' in r
+    # test that only the right type of files are validated
+    def test_txt_file_validate(self):
+        with pytest.raises(TypeError, message='.txt file should not be upload-able'):
+            mimetype = fv.detect_file_type('app/tests/test.txt')
+
+    def test_csv_type(self):
+        mimetype = fv.detect_file_type('app/tests/store_data.csv')
+        assert mimetype == 'csv', 'File type detector can\'t recognize a CSV'
+
+    def test_xlsx_type(self):
+        mimetype = fv.detect_file_type('app/tests/store_data.xlsx')
+        assert mimetype == 'xlsx', 'File type detector can\'t recognize an Excel sheet'
+
+    def test_xlsx_type(self):
+        mimetype = fv.detect_file_type('app/tests/store_data.tsv')
+        assert mimetype == 'tsv', 'File type detector can\'t recognize a TSV'
+
+    # test that only files with correct headers are validated
+
 
 if __name__ == '__main__':
     unittest.main()
