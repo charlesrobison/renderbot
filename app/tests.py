@@ -76,21 +76,33 @@ class RenderbotTestCase(TestCase):
 
     def test_home_dir(self):
         rv = self.c.get('/')
+        self.assertEqual(rv.status_code, 200)
         assert b'Renderbot' in rv.data, 'There\'s something wrong with your home page'
 
     # test that you can't access dashboard while not logged in
     def test_unverified_dashboard(self):
+        target_url = url_for('home.dashboard')
+        redirect_url = url_for('auth.login', next=url_for('home.dashboard'))
+        rv = self.c.get(target_url)
+        self.assertEqual(rv.status_code, 302)
+        self.assertRedirects(rv, redirect_url)
+
+    # test that you get the right error message when you try to access dashboard without being logged in
+    def test_unverified_dashboard_message(self):
         rv = self.c.get('/dashboard', follow_redirects=True)
         assert b'You must be logged in to access this page.' in rv.data, 'You should not be able to access the dashboard without login'
 
     def test_registration_page(self):
         rv = self.c.get('/register')
+        self.assertEqual(rv.status_code, 200)
         assert b'Register for an Account' in rv.data, 'Your registration page is broken'
 
-    def test_login_pate(self):
+    def test_login_page(self):
         rv = self.c.get('/login')
+        self.assertEqual(rv.status_code, 200)
         assert b'Login to your account' in rv.data, 'The login page doesn\'t render properly'
 
+    ## integration tests
     # def test_login(self):
     #     with self.c:
     #         rv = self.c.post('/login', data=dict(
