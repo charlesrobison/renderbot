@@ -26,6 +26,7 @@ import app.auth.utilities as utilities
 # $export FLASK_CONFIG=development
 # contexts in flask: http://kronosapiens.github.io/blog/2014/08/14/understanding-contexts-in-flask.html
 # https://pythonhosted.org/Flask-Testing/
+# should add coverage report: https://pypi.python.org/pypi/pytest-cov/
 
 class RenderbotTestCase(TestCase):
     # Testing setup
@@ -102,40 +103,6 @@ class RenderbotTestCase(TestCase):
         self.assertEqual(rv.status_code, 200)
         assert b'Login to your account' in rv.data, 'The login page doesn\'t render properly'
 
-    ## integration tests
-    # def test_login(self):
-    #     with self.c:
-    #         rv = self.c.post('/login', data=dict(
-    #             email="test@test.com",
-    #             password="test"
-    #         ), follow_redirects=True)
-    #         print(rv.data)
-    #         # assert b'Hi,' in rv.data
-    #         # print(current_user)
-    #         self.assert_redirects(rv, url_for('home.dashboard')), 'Unable to login'
-
-    # def test_logout(self):
-    #     rv = self.logout()
-    #     assert b'You have successfully been logged out.' in rv.data, 'Unable to log out'
-
-    # test that logging in a fake user doesn't work
-    # def test_bad_login(self):
-    #     rv = self.login('test@test.com', 'test')
-    #     assert b'Hi,' in rv.data
-    #     print(rv.data)
-    #     rv = self.login('bob', 'joe')
-    #     assert b'Invalid email address.' in rv.data
-    #     rv = self.login('test@test.com', 'fake')
-    #     print(rv.data)
-    #     assert b'Invalid email or password.' in rv.data, 'You managed to log in a fake user'
-
-    # test rendering of form submissions
-
-    # def test_registration_form(self):
-    #     # for problems here: http://stackoverflow.com/questions/17375340/testing-code-that-requires-a-flask-app-or-request-context
-    #     with self.app.app_context():
-    #         r = RegistrationForm()
-
     # unit tests
 
     # test that database is set up properly
@@ -192,10 +159,8 @@ class RenderbotTestCase(TestCase):
 
     # test that creating sorted df works
     def test_sorted_df(self):
-        # this isn't working properly, doesn't seem to be sorting
         df = utilities.create_df_with_parse_date('app/tests/store_data.csv', 'csv', 'Ship Date')
-        print(df.head())
-        # assert df.head()
+        self.assertEqual(df.iloc[0][0], 24225, 'You\'re not sorting your dataframe properly.')
 
 if __name__ == '__main__':
     unittest.main()
