@@ -1,3 +1,4 @@
+# Imports
 import pandas as pd
 
 def create_df(file, file_type):
@@ -15,10 +16,11 @@ def create_df(file, file_type):
 def create_df_with_parse_date(file, file_type, parse):
     if file_type == 'csv':
         # Load CSV file type
-        df = pd.DataFrame(pd.read_csv(file, encoding='ISO-8859-1', parse_dates=[parse]))
+        df = pd.DataFrame(pd.read_csv(file, encoding='ISO-8859-1', parse_dates=['Ship Date', 'Order Date']))
     elif file_type == 'tsv':
-        df = pd.DataFrame(pd.read_csv(file, encoding='ISO-8859-1', sep='\t', parse_dates=[parse]))
+        df = pd.DataFrame(pd.read_csv(file, encoding='ISO-8859-1', sep='\t', parse_dates=['Ship Date', 'Order Date']))
     else:
         # Load files with excel based file extensions
-        df = pd.DataFrame(pd.read_excel(file, encoding='ISO-8859-1', parse_dates=[parse]))
+        df = pd.DataFrame(pd.read_excel(file, encoding='ISO-8859-1', parse_dates=['Ship Date', 'Order Date']))
+    df = df.sort_values(by=[parse], ascending=True)
     return df

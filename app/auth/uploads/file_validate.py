@@ -9,11 +9,10 @@ def detect_file_type(file):
     valid_file_types = {'text/csv': 'csv', 'text/tab-separated-values': 'tsv', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx'}
     mime = MimeTypes()
     file_type = mime.guess_type(file)
-    print(file_type)
     if file_type[0] not in valid_file_types:
         raise TypeError
     else:
-        file_type = valid_file_types[file_type]
+        file_type = valid_file_types[file_type[0]]
     return file_type
 
 
