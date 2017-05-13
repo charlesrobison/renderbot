@@ -13,7 +13,8 @@ from config import app_config
 # db variable initialization
 db = SQLAlchemy()
 login_manager = LoginManager()
-
+login_manager.login_message = "You must be logged in to access this page."
+login_manager.login_view = "auth.login"
 
 def create_app(config_name):
     app = Flask(__name__, instance_relative_config=True)
@@ -23,8 +24,6 @@ def create_app(config_name):
 
     # Code for login manager
     login_manager.init_app(app)
-    login_manager.login_message = "You must be logged in to access this page."
-    login_manager.login_view = "auth.login"
 
     # Code for db migrations
     migrate = Migrate(app, db)

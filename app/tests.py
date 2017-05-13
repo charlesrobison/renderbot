@@ -12,7 +12,7 @@ import unittest
 
 # Local imports
 import app.__init__ as app_init
-from app import db
+from app import db, login_manager
 from app.auth.forms import RegistrationForm
 from app.models import User
 from app.auth.uploads import file_validate as fv
