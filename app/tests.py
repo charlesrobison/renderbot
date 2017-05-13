@@ -1,5 +1,4 @@
 # Imports
-from coverage import coverage
 from flask import Flask
 from flask import url_for
 from flask_sqlalchemy import SQLAlchemy
@@ -28,9 +27,6 @@ import app.auth.utilities as utilities
 # $export FLASK_CONFIG=development
 # contexts in flask: http://kronosapiens.github.io/blog/2014/08/14/understanding-contexts-in-flask.html
 # https://pythonhosted.org/Flask-Testing/
-
-cov = coverage(branch=True, omit=['tests.py'])
-cov.start()
 
 class RenderbotTestCase(TestCase):
     def create_app(self):
@@ -252,14 +248,3 @@ class RenderbotTestCase(TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-    # try:
-    #     unittest.main()
-    # except:
-    #     pass
-    # cov.stop()
-    # cov.save()
-    # print("\n\nCoverage Report:\n")
-    # cov.report()
-    # print("HTML version: " + os.path.join(basedir, "tmp/coverage/index.html"))
-    # cov.html_report(directory='tmp/coverage')
-    # cov.erase()
