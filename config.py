@@ -26,9 +26,11 @@ class ProductionConfig(Config):
 
 
 class TestingConfig(Config):
+    # DEBUG = True
     TESTING = True
     SQLALCHEMY_ECHO = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    WTF_CSRF_ENABLED = False
 
 app_config = {
     'development': DevelopmentConfig,

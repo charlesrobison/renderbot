@@ -9,6 +9,7 @@ from flask_uploads import UploadSet, DOCUMENTS, DATA, configure_uploads
 
 # local imports
 from config import app_config
+from .models import User
 
 # db variable initialization
 db = SQLAlchemy()
