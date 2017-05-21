@@ -12,7 +12,6 @@ import copy
 
 # Local Imports
 import app
-from app import login_manager
 from . import auth
 from .forms import LoginForm, RegistrationForm, UploadForm
 from .. import db
@@ -22,11 +21,6 @@ from .utilities import create_df, create_df_with_parse_date
 
 # Global variables
 UPLOAD_FOLDER = '/tmp/renderbot_uploads'
-
-# # Set up user_loader
-# @login_manager.user_loader
-# def load_user(user_id):
-#     return User.query.get(user_id)
 
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
