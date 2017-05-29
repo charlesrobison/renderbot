@@ -23,7 +23,6 @@ from .utilities import create_df, create_df_with_parse_date
 # Global variables
 UPLOAD_FOLDER = '/tmp/renderbot_uploads'
 
-
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
     """

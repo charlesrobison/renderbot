@@ -3,7 +3,8 @@ from flask import Flask
 from flask import url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_testing import TestCase
-from flask.ext.login import current_user
+from flask_login import current_user
+from flask_login import login_user, logout_user
 import os
 import pytest
 import tempfile
@@ -11,7 +12,7 @@ import unittest
 
 # Local imports
 import app.__init__ as app_init
-from app.__init__ import db
+from app import db, login_manager
 from app.auth.forms import RegistrationForm
 from app.models import User
 from app.auth.uploads import file_validate as fv
@@ -29,19 +30,17 @@ import app.auth.utilities as utilities
 # should add coverage report: https://pypi.python.org/pypi/pytest-cov/
 
 class RenderbotTestCase(TestCase):
-    # Testing setup
-    SQLALCHEMY_DATABASE_URI = "sqlite://"
-    TESTING = True
-
     def create_app(self):
         app = app_init.create_app('testing')
         app.config['TESTING'] = True # not sure I need this
+        app.config.update(
+            SQLALCHEMY_DATABASE_URI = 'mysql://renderbot_admin:renderbot@renderbot.cy4xjwjlyq1s.us-west-2.rds.amazonaws.com/renderbot_test'
+        )
         return app
 
     def setUp(self):
         self.c = self.app.test_client()
         db.init_app(self.app)
-        # db.create_all(app=app_init.create_app('testing'))
         db.create_all()
         self.first_user =  User(email="test@test.com",
                         username="Test",
@@ -59,19 +58,11 @@ class RenderbotTestCase(TestCase):
                         last_name="Test",
                         password="test")
         db.session.add(self.first_user)
+        db.session.commit()
 
     def tearDown(self):
         db.session.remove()
         db.drop_all()
-
-    def login(self, email, password):
-        return self.c.post('/login', data=dict(
-            email=email,
-            password=password
-        ), follow_redirects=True)
-
-    def logout(self):
-        return self.app.test_client().get('/logout', follow_redirects=True)
 
     # tests of individual pages
 
@@ -98,10 +89,14 @@ class RenderbotTestCase(TestCase):
         self.assertEqual(rv.status_code, 200)
         assert b'Register for an Account' in rv.data, 'Your registration page is broken'
 
-    def test_login_page(self):
-        rv = self.c.get('/login')
-        self.assertEqual(rv.status_code, 200)
-        assert b'Login to your account' in rv.data, 'The login page doesn\'t render properly'
+    # test that logging in a fake user doesn't work
+    def test_bad_login(self):
+        with self.c:
+            rv = self.c.post('/login', data=dict(email="bob", password="fred"))
+            assert b'Invalid email address.' in rv.data
+            rv = self.c.post('/login', data=dict(email='test@test.com', password='fake'))
+            print(rv.data)
+            assert b'Invalid email or password.' in rv.data, 'You managed to log in a fake user'
 
     # unit tests
 

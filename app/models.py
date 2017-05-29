@@ -5,7 +5,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from app import db, login_manager
 
-
 class User(UserMixin, db.Model):
     """
     Create a User table
@@ -44,15 +43,13 @@ class User(UserMixin, db.Model):
         """
         return check_password_hash(self.password_hash, password)
 
+    # Set up user_loader
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
+
     def __repr__(self):
         return '<User: {}>'.format(self.username)
-
-
-# Set up user_loader
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
 
 class File(db.Model):
     """
