@@ -1,27 +1,8 @@
-<<<<<<< HEAD
-||||||| merged common ancestors
-<<<<<<<<< Temporary merge branch 1
-.ipynb_*
-/renderenv
-__pycache__/
-||||||||| merged common ancestors
-.ipynb_*
-=========
-=======
-<<<<<<< HEAD
-.ipynb_*
-/renderenv
-__pycache__/
-||||||| merged common ancestors
-.ipynb_*
-=======
->>>>>>> origin/master
 .ipynb_*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-/renderenv
 
 # C extensions
 *.so
@@ -50,6 +31,9 @@ wheels/
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
+
+# Github
+.idea
 
 # Installer logs
 pip-log.txt
@@ -116,9 +100,3 @@ ENV/
 
 # mkdocs documentation
 /site
-<<<<<<< HEAD
-||||||| merged common ancestors
->>>>>>>>> Temporary merge branch 2
-=======
->>>>>>> origin/master
->>>>>>> origin/master

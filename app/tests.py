@@ -27,6 +27,7 @@ import app.auth.utilities as utilities
 # $export FLASK_CONFIG=development
 # contexts in flask: http://kronosapiens.github.io/blog/2014/08/14/understanding-contexts-in-flask.html
 # https://pythonhosted.org/Flask-Testing/
+# should add coverage report: https://pypi.python.org/pypi/pytest-cov/
 
 class RenderbotTestCase(TestCase):
     def create_app(self):
@@ -70,7 +71,7 @@ class RenderbotTestCase(TestCase):
         self.assertEqual(rv.status_code, 200)
         assert b'Renderbot' in rv.data, 'There\'s something wrong with your home page'
 
-    # # test that you can't access dashboard while not logged in
+    # test that you can't access dashboard while not logged in
     def test_unverified_dashboard(self):
         target_url = url_for('home.dashboard')
         redirect_url = url_for('auth.login', next=url_for('home.dashboard'))
@@ -153,10 +154,8 @@ class RenderbotTestCase(TestCase):
 
     # test that creating sorted df works
     def test_sorted_df(self):
-        # this isn't working properly, doesn't seem to be sorting
         df = utilities.create_df_with_parse_date('app/tests/store_data.csv', 'csv', 'Ship Date')
-        print(df.head())
-        # assert df.head()
+        self.assertEqual(df.iloc[0][0], 24225, 'You\'re not sorting your dataframe properly.')
 
 if __name__ == '__main__':
     unittest.main()
