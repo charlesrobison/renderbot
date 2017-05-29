@@ -43,15 +43,13 @@ class User(UserMixin, db.Model):
         """
         return check_password_hash(self.password_hash, password)
 
+    # Set up user_loader
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
+
     def __repr__(self):
         return '<User: {}>'.format(self.username)
-
-
-# Set up user_loader
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
 
 class File(db.Model):
     """
