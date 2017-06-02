@@ -51,6 +51,7 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return '<User: {}>'.format(self.username)
 
+
 class File(db.Model):
     """
     Create a files table
@@ -68,6 +69,7 @@ class File(db.Model):
 
     def __repr__(self):
         return '<File: {}>'.format(self.name)
+
 
 class Analysis(db.Model):
     """
