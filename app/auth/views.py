@@ -16,7 +16,7 @@ import app
 from . import auth
 from .forms import LoginForm, RegistrationForm, UploadForm
 from .. import db
-from ..models import Analysis, User, File
+from ..models import User, File
 from .uploads.file_validate import detect_file_type, has_valid_headers
 from .utilities import create_df, create_df_with_parse_date
 
